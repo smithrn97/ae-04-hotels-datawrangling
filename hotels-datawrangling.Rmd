@@ -1,11 +1,13 @@
 ---
 title: "Hotel bookings - data wrangling"
-author: "YOU"
+author: "Rebecca"
 date: "`r Sys.Date()`"
 output: 
   html_document: 
     toc: yes
     toc_float: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r load-pkg, message = FALSE}
@@ -40,17 +42,13 @@ skim(hotels)
 
 Are people traveling on a whim? Let's see... 
 
-Fill in the blanks for filtering for hotel bookings where the guest is **not** 
-from the US (`country` code `"USA"`) and the `lead_time` is less than 1 day.
+6,174 people booked one day ahead. So, there are 6,174 individuals in this dataset that traveled on a whim.
 
-**Note:** You will need to set `eval=TRUE` when you have an answer you want to 
-try out.
-
-```{r travel-whim, eval=FALSE}
+```{r travel-whim, eval=TRUE}
 hotels %>%
   filter(
-    country ____ "USA", 
-    lead_time ____ ____
+    country != "USA", 
+    lead_time < 1
     )
 ```
 
@@ -58,37 +56,34 @@ hotels %>%
 
 How many bookings involve at least 1 child **or** baby?
 
-In the following chunk, replace 
+9,332 bookings involve at least 1 child or 1 baby.
 
-- `[AT LEAST]` with the logical operator for "at least" (in two places)
-- `[OR]` with the logical operator for "or"
-
-**Note:** You will need to set `eval=TRUE` when you have an answer you want to 
-try out.
-
-```{r some-children, eval=FALSE}
+```{r some-children, eval=TRUE}
 hotels %>%
   filter(
-    children [AT LEAST] 1 [OR] babies [AT LEAST] 1
+    children >= 1 | babies >= 1
     )
 ```
 
 ### Exercise 4.
 
 Do you think it's more likely to find bookings with children or babies in city 
-hotels or resort hotels? Test your intuition. Using `filter()` determine the 
-number of bookings in resort hotels that have more than 1 child **or** baby 
-in the room? Then, do the same for city hotels, and compare the numbers of 
-rows in the resulting filtered data frames.
+hotels or resort hotels? Test your intuition.
+
+When filtering the number of bookings with children in both types of hotels, it appears that there are more bookings with children in city hotels (n = 5,403) as compared to resort hotels (n = 3,929).
 
 ```{r resort-children}
-# add code here
-# pay attention to correctness and code style
+hotels %>%
+  filter(
+    hotel == "Resort Hotel",
+    children >= 1 | babies >= 1)
 ```
 
 ```{r city-children}
-# add code here
-# pay attention to correctness and code style
+hotels %>%
+  filter(
+    hotel == "City Hotel",
+    children >= 1 | babies >= 1)
 ```
 
 ### Exercise 5.
@@ -98,14 +93,11 @@ results in descending order so the most common observation is on top. What is
 the most common number of adults in bookings in this dataset? Are there any 
 surprising results?
 
-**Note:** Don't forget to label your R chunk as well (where it says `label-me-1`). 
-Your label should be short, informative, and shouldn't include spaces. It also 
-shouldn't repeat a previous label, otherwise R Markdown will give you an 
-error about repeated R chunk labels.
+The most common number of adults in a booking are two adults. The bookings for 50 and 55 adults to a hotel room are the most suprising results.
 
-```{r label-me-1}
-# add code here
-# pay attention to correctness and code style
+```{r num_adults}
+hotels%>%
+  count(adults, sort = TRUE)
 ```
 
 ### Exercise 6.
@@ -114,11 +106,18 @@ Repeat Exercise 5, once for canceled bookings (`is_canceled` coded as 1) and
 once for not canceled bookings (`is_canceled` coded as 0). What does this 
 reveal about the surprising results you spotted in the previous exercise?
 
-**Note:** Don't forget to label your R chunk as well (where it says `label-me-2`). 
+The larger bookings (i.e., the bookings for 50 and 55 people) were canceled.
 
-```{r label-me-2}
-# add code here
-# pay attention to correctness and code style
+```{r num_adults_canceled}
+#canceled
+hotels%>%
+  filter(is_canceled == 1)%>%
+  count(adults, sort = TRUE)
+
+#not canceled
+hotels%>%
+  filter(is_canceled == 0)%>%
+  count(adults, sort = TRUE)
 ```
 
 ### Exercise 7.
@@ -127,26 +126,33 @@ Calculate minimum, mean, median, and maximum average daily rate (`adr`) grouped
 by `hotel` type so that you can get these statistics separately for resort and 
 city hotels. Which type of hotel is higher, on average? 
 
-```{r label-me-3}
-# add code here
-# pay attention to correctness and code style
+City hotels are higher on average, with a daily rate of $105, as compared to resort hotels, which have an average daily rate of $95.
+
+```{r adr_summary_stats}
+hotels%>%
+  group_by(hotel)%>%
+  summarize(
+    min_adr = min(adr),
+    mean_adr = mean(adr),
+    median_adr = median(adr),
+    max_adr = max(adr)
+  )
 ```
 
 ### Exercise 8.
 
 We observe two unusual values in the summary statistics above -- a negative 
-minimum, and a very high maximum). What types of hotels are these? Locate 
-these observations in the dataset and find out the arrival date (year and 
-month) as well as how many people (adults, children, and babies) stayed in 
-the room. You can investigate the data in the viewer to locate these values, but 
-preferably you should identify them in a reproducible way with some code. 
+minimum, and a very high maximum). What types of hotels are these? 
 
-**Hint:** For example, you can `filter` for the given `adr` amounts and 
-`select` the relevant columns.
+The minimum adr comes from a booking with a resort hotel during March of 2017. That booking was intended for two adults.
 
-```{r label-me-4}
-# add code here
-# pay attention to correctness and code style
+The maximum adr comes from a booking with a city hotel during March of 2016. Again, that booking was intended for two adults.
+
+```{r looking_at_extremes}
+hotels%>%
+  filter(adr == min(adr) | adr == max(adr))%>%
+  select(adr, hotel, arrival_date_year, arrival_date_month, adults, children, babies)
+  
 ```
 
 
